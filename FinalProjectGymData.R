@@ -2,8 +2,8 @@
 ### STAT 43000
 ### Analysis of Gym Dataset (Final Project)
 
-# GymData = read.csv("C:\\Users\\PGBiz\\OneDrive\\Desktop\\spring 2025\\app stats\\project\\GymDataAnalysis\\gym_members_exercise_tracking.csv")
-GymData = read.csv("C:\\1Courses\\STAT430\\Project\\GymDataAnalysis\\gym_members_exercise_tracking.csv") # Julian's Laptop
+GymData = read.csv("C:\\Users\\PGBiz\\OneDrive\\Desktop\\spring 2025\\app stats\\project\\GymDataAnalysis\\gym_members_exercise_tracking.csv")
+# GymData = read.csv("C:\\1Courses\\STAT430\\Project\\GymDataAnalysis\\gym_members_exercise_tracking.csv") # Julian's Laptop
 # GymData = read.csv("D:\\2school\\STAT430\\GymDataAnalysis\\gym_members_exercise_tracking.csv") # Julian's PC
 head(GymData)
 attach(GymData)
@@ -84,9 +84,76 @@ GenderBin = ifelse(Gender == "Male", 1, 0) # Male = 1, Female = 0
 genderModel = glm(GenderBin ~ Avg_BPM + Session_Duration + Calories_Burned + Workout_Type + Workout_Frequency + Experience_Level, family="binomial")
 summary(genderModel)
 
+<<<<<<< Updated upstream
 
 # Predictions using our models
 
 predict(calModel3, data.frame(Age = 22, Gender = "Male", Avg_BPM=142,Session_Duration=.8245), type = "resp") # 49m 47s workout, actual 511, predicted: 684.0528
 
 predict(calModel3, data.frame(Age=22, Gender="Male", Avg_BPM=142, Session_Duration=1.4), type="resp")
+=======
+# predict calories
+head(GymData)
+predict(calModel3, data.frame(Age=22, Gender="Male", Avg_BPM=142, Session_Duration=1.4), type="resp") # Train App says: 849, our model says 1096.544
+
+
+#Residual analysis of calModel3
+#residual vs. fitted
+plot(calModel3$fitted.values, calModel3$residuals,
+     xlab = "Fitted Values", ylab = "Residuals",
+     main = "Residuals vs Fitted")
+abline(h = 0, col = "red")
+
+#### Should probably boxcox calmodel3
+library(MASS)
+boxcox_result <- boxcox(calModel3, lambda = seq(-2, 2, 0.1))
+
+
+
+######## I asked chatgpt, and it did this, it the boxcox didnt fix much, but the quad did? 
+
+lambda_opt <- boxcox_result$x[which.max(boxcox_result$y)]
+lambda_opt
+Calories_Transformed <- (Calories_Burned^lambda_opt - 1) / lambda_opt
+calModel_bc <- lm(Calories_Transformed ~ Age + Gender + Avg_BPM + Session_Duration)
+summary(calModel_bc)
+calModel_bc <- lm(log(Calories_Burned) ~ Age + Gender + Avg_BPM + Session_Duration)
+summary(calModel_bc)
+plot(calModel_bc$fitted.values, calModel_bc$residuals)
+abline(h = 0, col = "red")
+
+
+##### The residuals vs. fitted plot now shows no clear pattern, which means:
+#The model correctly captures the non-linear relationship (thanks to Session_Duration²).  <-- i dont understand how this works
+#The residuals appear randomly scattered around zero.                                        |
+#This is a strong indication that the linearity assumption is now satisfied.                 |
+#And statistically:                                                                          |
+#  Residual standard error decreased: from ~0.063 to ~0.03                                   |
+#Adjusted R² increased: from 0.961 → 0.991                                                   |
+#All predictors, including the squared term, are highly significant                          |
+#                                                                                            v
+calModel_quad <- lm(log(Calories_Burned) ~ Age + Gender + Avg_BPM + Session_Duration + I(Session_Duration^2))
+summary(calModel_quad)
+
+# Diagnostic plot
+plot(calModel_quad$fitted.values, calModel_quad$residuals)
+abline(h = 0, col = "red")
+
+####################################################
+
+
+
+
+
+
+#qq plot
+qqnorm(residuals(calModel3), main = "Normal Q-Q")
+qqline(residuals(calModel3), col = "red")
+
+hist(residuals(calModel3), breaks = 20, col = "lightblue",
+     main = "Histogram of Residuals", xlab = "Residuals")
+
+plot(calModel3, which = 3)
+plot(calModel3, which = 4)  # Cook’s distance
+plot(calModel3, which = 5)  # Residuals vs leverage
+>>>>>>> Stashed changes
