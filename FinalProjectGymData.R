@@ -2,9 +2,9 @@
 ### STAT 43000
 ### Analysis of Gym Dataset (Final Project)
 
-GymData = read.csv("C:\\Users\\PGBiz\\OneDrive\\Desktop\\spring 2025\\app stats\\project\\GymDataAnalysis\\gym_members_exercise_tracking.csv")
+# GymData = read.csv("C:\\Users\\PGBiz\\OneDrive\\Desktop\\spring 2025\\app stats\\project\\GymDataAnalysis\\gym_members_exercise_tracking.csv")
 # GymData = read.csv("C:\\1Courses\\STAT430\\Project\\GymDataAnalysis\\gym_members_exercise_tracking.csv") # Julian's Laptop
-# GymData = read.csv("D:\\2school\\STAT430\\GymDataAnalysis\\gym_members_exercise_tracking.csv") # Julian's PC
+GymData = read.csv("D:\\2school\\STAT430\\GymDataAnalysis\\gym_members_exercise_tracking.csv") # Julian's PC
 head(GymData)
 attach(GymData)
 
@@ -78,21 +78,20 @@ AIC(calModel3)
 # similar AIC values 
 # We will use calModel3 because it has the least parameters
 
+# Predictions using our models
 
 # Gender prediction given workout details
 GenderBin = ifelse(Gender == "Male", 1, 0) # Male = 1, Female = 0
-genderModel = glm(GenderBin ~ Avg_BPM + Session_Duration + Calories_Burned + Workout_Type + Workout_Frequency + Experience_Level, family="binomial")
-summary(genderModel)
-
-
-# Predictions using our models
-
-predict(calModel3, data.frame(Age = 22, Gender = "Male", Avg_BPM=142,Session_Duration=.8245), type = "resp") # 49m 47s workout, actual 511, predicted: 684.0528
-
-predict(calModel3, data.frame(Age=22, Gender="Male", Avg_BPM=142, Session_Duration=1.4), type="resp")
+genderModel = glm(GenderBin ~ Avg_BPM + Session_Duration + Workout_Type + Workout_Frequency + Experience_Level + Calories_Burned, family="binomial")
+stepAIC(genderModel)
+genderModel2 = glm(GenderBin~ Avg_BPM + Session_Duration + Calories_Burned, family="binomial")
+summary(genderModel2)
+genderModel3 = glm(GenderBin~ Avg_BPM + Session_Duration + Calories_Burned + Workout_Type, family="binomial")
+summary(genderModel3)
 
 # predict calories
-head(GymData)
+predict(calModel3, data.frame(Age = 22, Gender = "Male", Avg_BPM=142,Session_Duration=.8245), type = "resp") # 49m 47s workout, actual 511, predicted: 684.0528
+
 predict(calModel3, data.frame(Age=22, Gender="Male", Avg_BPM=142, Session_Duration=1.4), type="resp") # Train App says: 849, our model says 1096.544
 
 
@@ -102,6 +101,7 @@ plot(calModel3$fitted.values, calModel3$residuals,
      xlab = "Fitted Values", ylab = "Residuals",
      main = "Residuals vs Fitted")
 abline(h = 0, col = "red")
+plot(calModel3, 1)
 
 plot(calModel3, which=1)
 
