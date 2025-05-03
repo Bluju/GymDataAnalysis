@@ -60,7 +60,7 @@ ggplot(GymData, aes(x = factor(Workout_Frequency), y = BMI)) +
 
 # Objectives
 
-# Calories Burned  // given Exp. level, Workout Freq., and Workout Type
+# Calories Burned  
 # Model selection using bidirectional Stepwise elimination
 library(MASS)
 calModel = lm(Calories_Burned ~ Age + Gender + Weight + Height + Avg_BPM + Session_Duration + Workout_Type + Fat_Percentage + Water_Intake + Workout_Frequency + Experience_Level + BMI)
@@ -83,3 +83,10 @@ AIC(calModel3)
 GenderBin = ifelse(Gender == "Male", 1, 0) # Male = 1, Female = 0
 genderModel = glm(GenderBin ~ Avg_BPM + Session_Duration + Calories_Burned + Workout_Type + Workout_Frequency + Experience_Level, family="binomial")
 summary(genderModel)
+
+
+# Predictions using our models
+
+predict(calModel3, data.frame(Age = 22, Gender = "Male", Avg_BPM=142,Session_Duration=.8245), type = "resp") # 49m 47s workout, actual 511, predicted: 684.0528
+
+predict(calModel3, data.frame(Age=22, Gender="Male", Avg_BPM=142, Session_Duration=1.4), type="resp")
