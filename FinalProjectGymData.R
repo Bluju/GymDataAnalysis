@@ -88,12 +88,20 @@ genderModel2 = glm(GenderBin~ Avg_BPM + Session_Duration + Calories_Burned, fami
 summary(genderModel2)
 genderModel3 = glm(GenderBin~ Avg_BPM + Session_Duration + Calories_Burned + Workout_Type, family="binomial")
 summary(genderModel3)
+plot(genderModel3, which = 1)
+
+
+
 
 # predict calories
 predict(calModel3, data.frame(Age = 22, Gender = "Male", Avg_BPM=142,Session_Duration=.8245), type = "resp") # 49m 47s workout, actual 511, predicted: 684.0528
 
 predict(calModel3, data.frame(Age=22, Gender="Male", Avg_BPM=142, Session_Duration=1.4), type="resp") # Train App says: 849, our model says 1096.544
 
+
+#predict gender
+predict(genderModel3, (data.frame(Avg_BPM=142, Session_Duration=1.4, Calories_Burned=1096.544, Workout_Type="Strength")), type = "resp") # Actual: Male
+predict(genderModel3, (data.frame(Avg_BPM=156, Session_Duration=1.59, Calories_Burned=1116, Workout_Type="HIIT")), type="resp") # Actual: Female
 
 #Residual analysis of calModel3
 #residual vs. fitted
@@ -166,3 +174,43 @@ ggplot(GymData, aes(x=Session_Duration, y=Calories_Burned, color=factor(Experien
   labs(title="Effect of Session Duration on Calories Burned by Experience Level",
        color="Experience Level") +
   theme_light()
+
+
+
+ggplot(pred_df, aes(x=predicted, fill=factor(actual))) +
+  geom_histogram(alpha=0.5, position="identity", bins=30) +
+  scale_fill_manual(values=c("pink", "blue"), 
+                    labels=c("Female", "Male"), name="Actual Gender") +
+  labs(title="Distribution of Predicted Probabilities by Gender",
+       x="Predicted Probability of Male", y="Count") +
+  theme_minimal()
+
+
+# Create confusion matrix
+library(ggplot2)
+
+# Convert to data frame
+conf_mat <- table(
+  Predicted = factor(pred_class, levels=c(0,1), labels=c("Female", "Male")),
+  Actual = factor(GenderBin, levels=c(0,1), labels=c("Female", "Male"))
+)
+conf_df <- as.data.frame(conf_mat)
+names(conf_df) <- c("Predicted", "Actual", "Frequency")
+
+# Create heatmap
+ggplot(conf_df, aes(x=Actual, y=Predicted, fill=Frequency)) +
+  geom_tile() +
+  geom_text(aes(label=Frequency), color="white", size=12) +
+  scale_fill_gradient(low="lightblue", high="darkblue") +
+  labs(title="Confusion Matrix", fill="Count") +
+  theme_minimal()
+
+
+
+library(popbio)
+log_model_bpm <- glm(GenderBin ~ Avg_BPM, data = GymData, family = "binomial")
+logi.hist.plot(independ = GymData$Avg_BPM,
+               depend = GenderBin,
+               boxp = FALSE,
+               type = "hist",
+               col = "lightblue")
