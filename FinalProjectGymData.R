@@ -84,14 +84,13 @@ GenderBin = ifelse(Gender == "Male", 1, 0) # Male = 1, Female = 0
 genderModel = glm(GenderBin ~ Avg_BPM + Session_Duration + Calories_Burned + Workout_Type + Workout_Frequency + Experience_Level, family="binomial")
 summary(genderModel)
 
-<<<<<<< Updated upstream
 
 # Predictions using our models
 
 predict(calModel3, data.frame(Age = 22, Gender = "Male", Avg_BPM=142,Session_Duration=.8245), type = "resp") # 49m 47s workout, actual 511, predicted: 684.0528
 
 predict(calModel3, data.frame(Age=22, Gender="Male", Avg_BPM=142, Session_Duration=1.4), type="resp")
-=======
+
 # predict calories
 head(GymData)
 predict(calModel3, data.frame(Age=22, Gender="Male", Avg_BPM=142, Session_Duration=1.4), type="resp") # Train App says: 849, our model says 1096.544
@@ -104,6 +103,8 @@ plot(calModel3$fitted.values, calModel3$residuals,
      main = "Residuals vs Fitted")
 abline(h = 0, col = "red")
 
+plot(calModel3, which=1)
+
 #### Should probably boxcox calmodel3
 library(MASS)
 boxcox_result <- boxcox(calModel3, lambda = seq(-2, 2, 0.1))
@@ -112,34 +113,16 @@ boxcox_result <- boxcox(calModel3, lambda = seq(-2, 2, 0.1))
 
 ######## I asked chatgpt, and it did this, it the boxcox didnt fix much, but the quad did? 
 
-lambda_opt <- boxcox_result$x[which.max(boxcox_result$y)]
+lambda_opt = boxcox_result$x[which.max(boxcox_result$y)]
 lambda_opt
 Calories_Transformed <- (Calories_Burned^lambda_opt - 1) / lambda_opt
-calModel_bc <- lm(Calories_Transformed ~ Age + Gender + Avg_BPM + Session_Duration)
+calModel_bc = lm(Calories_Transformed ~ Age + Gender + Avg_BPM + Session_Duration)
 summary(calModel_bc)
-calModel_bc <- lm(log(Calories_Burned) ~ Age + Gender + Avg_BPM + Session_Duration)
-summary(calModel_bc)
-plot(calModel_bc$fitted.values, calModel_bc$residuals)
-abline(h = 0, col = "red")
+plot(calModel_bc, which = 1)
+predict(calModel_bc, data.frame(Age=22, Gender="Male", Avg_BPM=142, Session_Duration=1.4), type="resp") # Train App says: 849, our model says 1096.544
 
 
-##### The residuals vs. fitted plot now shows no clear pattern, which means:
-#The model correctly captures the non-linear relationship (thanks to Session_Duration²).  <-- i dont understand how this works
-#The residuals appear randomly scattered around zero.                                        |
-#This is a strong indication that the linearity assumption is now satisfied.                 |
-#And statistically:                                                                          |
-#  Residual standard error decreased: from ~0.063 to ~0.03                                   |
-#Adjusted R² increased: from 0.961 → 0.991                                                   |
-#All predictors, including the squared term, are highly significant                          |
-#                                                                                            v
-calModel_quad <- lm(log(Calories_Burned) ~ Age + Gender + Avg_BPM + Session_Duration + I(Session_Duration^2))
-summary(calModel_quad)
-
-# Diagnostic plot
-plot(calModel_quad$fitted.values, calModel_quad$residuals)
-abline(h = 0, col = "red")
-
-####################################################
+########MASS####################################################
 
 
 
@@ -156,4 +139,30 @@ hist(residuals(calModel3), breaks = 20, col = "lightblue",
 plot(calModel3, which = 3)
 plot(calModel3, which = 4)  # Cook’s distance
 plot(calModel3, which = 5)  # Residuals vs leverage
->>>>>>> Stashed changes
+
+
+# Visuals
+# Correlation heatmap
+library(corrplot)
+corrplot(cor(GymData[,c("Age","Weight","BMI","Avg_BPM","Calories_Burned","Session_Duration")]), 
+         method="color", type="upper", order="hclust", 
+         addCoef.col = "black", tl.col="black", tl.srt=45)
+
+# Actual vs. Predicted plot
+predictions <- predict(calModel3)
+library(ggplot2)
+ggplot(data.frame(actual=GymData$Calories_Burned, predicted=predictions), 
+       aes(x=predicted, y=actual)) +
+  geom_point(alpha=0.5) +
+  geom_abline(intercept=0, slope=1, color="red") +
+  labs(title="Actual vs. Predicted Calories Burned",
+       x="Predicted Values", y="Actual Values") +
+  theme_minimal()
+
+# Experience level interaction with session duration
+ggplot(GymData, aes(x=Session_Duration, y=Calories_Burned, color=factor(Experience_Level))) +
+  geom_point(alpha=0.5) +
+  geom_smooth(method="lm") +
+  labs(title="Effect of Session Duration on Calories Burned by Experience Level",
+       color="Experience Level") +
+  theme_light()
