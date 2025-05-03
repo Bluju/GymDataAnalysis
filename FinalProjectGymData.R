@@ -75,25 +75,9 @@ summary(calModel3)
 AIC(calModel)
 AIC(calModel2)
 AIC(calModel3) 
+# similar AIC values 
+# We will use calModel3 because it has the least parameters
 
-# old calModel = lm(Calories_Burned ~ Experience_Level + Workout_Frequency + Workout_Type)
-summary(calModel)
-## Experience Level is significant
-## Workout Frequency and Workout Type are not significant
-
-
-calModel2 = lm(Calories_Burned ~ Age + Gender + Fat_Percentage + Session_Duration + Experience_Level + BMI)
-summary(calModel2)
-## Age, Gender, and Session Duration are significant
-## Fat_Percentage, Experience level, and BMI are not significant
-
-calModel3 = lm(Calories_Burned ~ Experience_Level + Age + Gender + Session_Duration)
-summary(calModel3)
-## Experience Level is no longer significant
-## Significant values are: Age, Gender, and Session Duration
-
-calModel4 = lm(Calories_Burned ~ Age + Gender + Session_Duration)
-summary(calModel4)
 
 # Gender prediction given workout details
 GenderBin = ifelse(Gender == "Male", 1, 0) # Male = 1, Female = 0
